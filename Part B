@@ -1,0 +1,100 @@
+// ---------- PART B: HIBERNATE STUDENT CRUD APPLICATION ----------
+
+package com.example.hibernate;
+
+import jakarta.persistence.*;
+import org.hibernate.*;
+import org.hibernate.cfg.Configuration;
+import java.util.List;
+
+// Student Entity
+@Entity
+@Table(name = "student")
+class Student {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+
+    private String name;
+    private int marks;
+
+    public Student() {}
+    public Student(String name, int marks) {
+        this.name = name;
+        this.marks = marks;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public int getMarks() { return marks; }
+    public void setName(String name) { this.name = name; }
+    public void setMarks(int marks) { this.marks = marks; }
+}
+
+// Hibernate Utility
+class HibernateUtil {
+    private static final SessionFactory factory = new Configuration().configure().buildSessionFactory();
+    public static SessionFactory getSessionFactory() {
+        return factory;
+    }
+}
+
+// Data Access Object (DAO)
+class StudentDao {
+
+    public void saveStudent(Student student) {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        Transaction tx = session.beginTransaction();
+        session.save(student);
+        tx.commit();
+        session.close();
+    }
+
+    public List<Student> getAllStudents() {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        List<Student> list = session.createQuery("from Student", Student.class).list();
+        session.close();
+        return list;
+    }
+
+    public void updateStudent(int id, String name) {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        Transaction tx = session.beginTransaction();
+        Student s = session.get(Student.class, id);
+        s.setName(name);
+        session.update(s);
+        tx.commit();
+        session.close();
+    }
+
+    public void deleteStudent(int id) {
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        Transaction tx = session.beginTransaction();
+        Student s = session.get(Student.class, id);
+        session.delete(s);
+        tx.commit();
+        session.close();
+    }
+}
+
+// Main Application
+public class PartB_Main {
+    public static void main(String[] args) {
+        StudentDao dao = new StudentDao();
+
+        dao.saveStudent(new Student("Riya", 85));
+        dao.saveStudent(new Student("Aditya", 90));
+
+        System.out.println("\nAll Students:");
+        List<Student> list = dao.getAllStudents();
+        for (Student s : list) {
+            System.out.println(s.getId() + " " + s.getName() + " " + s.getMarks());
+        }
+
+        dao.updateStudent(1, "Riya Sharma");
+        dao.deleteStudent(2);
+
+        System.out.println("CRUD Operations Completed Successfully!");
+    }
+}
